@@ -29,12 +29,12 @@ async def analyze_audio(request: Request):
         text = transcription.text.strip()
         words = text.split()
 
-        # Strict structure with list types for allowed_values and value_range
+        # Empty structure using DICTIONARIES {} as required by the latest error
         empty_response = {
             "rows": 0, "columns": [], "mean": {}, "std": {},
             "variance": {}, "min": {}, "max": {}, "median": {},
-            "mode": {}, "range": {}, "allowed_values": [], 
-            "value_range": [], "correlation": []
+            "mode": {}, "range": {}, "allowed_values": {}, 
+            "value_range": {}, "correlation": []
         }
 
         if not words:
@@ -53,17 +53,17 @@ async def analyze_audio(request: Request):
             "median": df.median().to_dict(),
             "mode": df.mode().iloc[0].to_dict(),
             "range": (df.max() - df.min()).to_dict(),
-            # Returns a flat list of unique values
-            "allowed_values": [int(x) for x in df["word_lengths"].unique()],
-            # Returns a flat list [min, max]
-            "value_range": [int(df["word_lengths"].min()), int(df["word_lengths"].max())],
+            # Reverted to dictionary format as expected
+            "allowed_values": {col: [int(x) for x in df[col].unique()] for col in df.columns},
+            "value_range": {col: [int(df[col].min()), int(df[col].max())] for col in df.columns},
             "correlation": df.corr().fillna(0).values.tolist()
         }
 
     except Exception:
+        # Return empty dictionary structure
         return {
             "rows": 0, "columns": [], "mean": {}, "std": {},
             "variance": {}, "min": {}, "max": {}, "median": {},
-            "mode": {}, "range": {}, "allowed_values": [],
-            "value_range": [], "correlation": []
+            "mode": {}, "range": {}, "allowed_values": {},
+            "value_range": {}, "correlation": []
         }
